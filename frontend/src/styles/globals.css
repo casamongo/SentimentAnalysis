@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  --color-bearish: #ef4444;
+  --color-neutral: #eab308;
+  --color-bullish: #22c55e;
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-card: #334155;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-border: #475569;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
