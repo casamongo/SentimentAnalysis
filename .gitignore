@@ -60,4 +60,5 @@ backend/alembic/versions/__pycache__/
 
 # FinBERT model cache
 .cache/
-models/
+/models/
+!backend/app/models/
