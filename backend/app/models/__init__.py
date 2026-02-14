@@ -8,10 +8,10 @@ from app.models.stock import Stock
 
 __all__ = [
     "Base",
-    "Stock",
-    "SourceConfig",
-    "SourceScore",
     "AggregateScore",
     "FetchLog",
     "SEED_SOURCES",
+    "SourceConfig",
+    "SourceScore",
+    "Stock",
 ]
