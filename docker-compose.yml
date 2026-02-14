@@ -1,94 +1,36 @@
-version: "3.9"
-
+version: "3.8"
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: sentiment_db
-      POSTGRES_USER: sentiment_user
-      POSTGRES_PASSWORD: sentiment_pass
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sentiment_user -d sentiment_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+  web:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
-    env_file: .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
-      - ./backend:/app
+      - .:/app
+    environment:
+      - ENV=development
+      - DATABASE_URL=sqlite:///./test.db
 
-  celery-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: celery -A app.core.celery_app worker -l info -Q fetch,aggregate,orchestrator,maintenance -c 4
-    env_file: .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  worker:
+    build: .
+    command: celery -A core.celery_app worker -l info -Q fetch,aggregate,orchestrator,maintenance -c 4
     volumes:
-      - ./backend:/app
+      - .:/app
+    environment:
+      - ENV=development
+      - DATABASE_URL=sqlite:///./test.db
 
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: celery -A app.core.celery_app beat -l info
-    env_file: .env
-    depends_on:
-      - redis
+  beat:
+    build: .
+    command: celery -A core.celery_app beat -l info
     volumes:
-      - ./backend:/app
+      - .:/app
+    environment:
+      - ENV=development
+      - DATABASE_URL=sqlite:///./test.db
 
   flower:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: celery -A app.core.celery_app flower --port=5555
+    build: .
+    command: celery -A core.celery_app flower --port=5555
     ports:
       - "5555:5555"
-    env_file: .env
-    depends_on:
-      - redis
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../Dockerfile.frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host
-
-volumes:
-  pgdata:
